@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player - Perfect Style</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* RESET TOTAL */
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        /* VIDEO BACKGROUND UTAMA */
+        #myVideo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            object-fit: cover;
+        }
+
+        /* OVERLAY SANGAT TIPIS AGAR VIDEO TERLIHAT JELAS */
+        body::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.25);
+            z-index: -1;
+        }
+
+        /* CONTAINER FULL SCREEN */
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            color: white;
+            text-align: center;
+            background: transparent; 
+            padding: 20px;
+        }
+
+        .header-tag {
+            font-size: 10px;
+            opacity: 0.5;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        /* Album Art Video (Tengah) */
+        .album-art {
+            width: 75vw;
+            max-width: 300px;
+            aspect-ratio: 1/1;
+            border-radius: 30px;
+            object-fit: cover;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .song-info { margin-bottom: 25px; }
+        .song-info .device { font-size: 11px; opacity: 0.6; margin-bottom: 4px; letter-spacing: 1px; }
+        .song-info .title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+
+        /* Progress Bar Merah */
+        .progress-container { width: 85%; max-width: 400px; }
+        .bar-bg { 
+            width: 100%; height: 5px; 
+            background: rgba(255,255,255,0.2); 
+            border-radius: 10px; 
+        }
+        .bar-fill { 
+            width: 0%; height: 100%; 
+            background: #ff0000; 
+            border-radius: 10px; 
+            box-shadow: 0 0 12px rgba(255, 0, 0, 0.7);
+        }
+        .time { 
+            display: flex; justify-content: space-between; 
+            font-size: 12px; margin-top: 10px; opacity: 0.8; font-variant-numeric: tabular-nums;
+        }
+
+        /* Tombol Play Saja */
+        .controls { margin: 25px 0; }
+        .play-btn { font-size: 60px !important; cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .play-btn:active { transform: scale(0.85); }
+
+        /* JENDELA LIRIK - KUNCI PRESISI */
+        .lyrics-window {
+            height: 120px; /* Menampung 3 baris (1 aktif, 2 bayangan) */
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            /* Masking agar lirik atas/bawah memudar */
+            mask-image: linear-gradient(transparent, black 35%, black 65%, transparent);
+            -webkit-mask-image: linear-gradient(transparent, black 35%, black 65%, transparent);
+        }
+
+        .lyrics-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Pergerakan naik lirik */
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            padding-top: 40px; /* Menaruh lirik pertama tepat di tengah jendela */
+        }
+
+        .line {
+            height: 40px; /* Tinggi baris tetap */
+            line-height: 40px; /* Teks tepat di tengah tinggi baris */
+            font-size: 20px;
+            font-weight: 800;
+            color: rgba(255, 0, 0, 0.15); /* Merah redup */
+            transition: all 0.4s ease;
+            white-space: nowrap;
+        }
+
+        .line.active {
+            color: #ff0000; /* Merah menyala */
+            transform: scale(1.15);
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <video autoplay muted loop id="myVideo">
+        <source src="background.mp4" type="video/mp4">
+    </video>
+
+    <audio id="mainAudio" src="RAHMAT TAHALU.mp3"></audio>
+
+    <div class="container">
+        <div class="header-tag">MUSIC PLAYER</div>
+        
+        <video id="albumVideo" class="album-art" loop muted playsinline>
+            <source src="car.mp4" type="video/mp4">
+        </video>
+
+        <div class="song-info">
+            <div class="device">PLAYING NOW</div>
+            <div class="title">DJ ADE SO MULAI NAKAL 🎧</div>
+        </div>
+
+        <div class="progress-container">
+            <div class="bar-bg">
+                <div class="bar-fill" id="fill"></div>
+            </div>
+            <div class="time">
+                <span id="current">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <i class="fas fa-play play-btn" id="ctrlIcon"></i>
+        </div>
+
+        <div class="lyrics-window">
+            <div id="lyricWrapper" class="lyrics-container">
+                <div class="line active">Rahmat Rahmat tahalu</div>
+                <div class="line">Rahmat tahalu nakal</div>
+                <div class="line">na na na na na</div>
+                <div class="line">Ade so mulai nakal</div>
+                <div class="line">Na na na nakal</div>
+                <div class="line">Na na na nakal</div>
+                <div class="line">Ade so mulai</div>
+                <div class="line">Nakal~nakal</div>
+                <div class="line">Rahmat~Rahmat tahalu</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const audio = document.getElementById('mainAudio');
+        const ctrlIcon = document.getElementById('ctrlIcon');
+        const fill = document.getElementById('fill');
+        const lyricWrapper = document.getElementById('lyricWrapper');
+        const lines = document.querySelectorAll('.line');
+        const currentTxt = document.getElementById('current');
+        const durationTxt = document.getElementById('duration');
+        const albumVideo = document.getElementById('albumVideo');
+
+        let step = 0;
+        // DETIK LIRIK (Pastikan angka ini pas dengan lagu Rahmat Tahalu kamu)
+        const lirikTimes = [1, 2, 5, 7, 9, 12, 14, 16, 18]; 
+         
+        ctrlIcon.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                albumVideo.play();
+                ctrlIcon.classList.replace('fa-play', 'fa-pause');
+            } else {
+                audio.pause();
+                albumVideo.pause();
+                ctrlIcon.classList.replace('fa-pause', 'fa-play');
+            }
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            // Progress Bar
+            const position = audio.currentTime / audio.duration;
+            fill.style.width = (position * 100 || 0) + "%";
+
+            // Timer
+            currentTxt.innerText = formatTime(audio.currentTime);
+            if(!isNaN(audio.duration)) {
+                durationTxt.innerText = "-" + formatTime(audio.duration - audio.currentTime);
+            }
+
+            // SINKRONISASI LIRIK PRESISI
+            lirikTimes.forEach((time, index) => {
+                if (audio.currentTime >= time) {
+                    if (index !== step) {
+                        lines[step].classList.remove('active');
+                        step = index;
+                        lines[step].classList.add('active');
+                        
+                        // GESER: - (Urutan * Tinggi Baris 40px)
+                        lyricWrapper.style.transform = `translateY(-${step * 40}px)`;
+                    }
+                }
+            });
+        });
+
+        function formatTime(seconds) {
+            let min = Math.floor(seconds / 60);
+            let sec = Math.floor(seconds % 60);
+            return `${min}:${sec < 10 ? '0' + sec : sec}`;
+        }
+    </script>
+</body>
+</html>
